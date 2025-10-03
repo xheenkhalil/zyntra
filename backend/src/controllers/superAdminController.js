@@ -1,6 +1,8 @@
-import { superAdmin, verifySuperAdminPassword } from "../config/superAdmin.js";
 import { generateToken } from "../utils/auth.js";
 import { logAction } from "../utils/logger.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // ======================
 // SuperAdmin Login
@@ -10,7 +12,7 @@ export async function superAdminLogin(req, res) {
 
   try {
     // Validate email
-    if (email !== superAdmin.email) {
+    if (email !== process.env.SUPERADMIN_EMAIL) {
       await logAction({ id: "superadmin", role: "superadmin" }, "FAILED_SUPERADMIN_LOGIN", {
         attempted_email: email
       });
@@ -18,8 +20,7 @@ export async function superAdminLogin(req, res) {
     }
 
     // Validate password
-    const match = await verifySuperAdminPassword(password);
-    if (!match) {
+    if (password !== process.env.SUPERADMIN_PASSWORD) {
       await logAction({ id: "superadmin", role: "superadmin" }, "FAILED_SUPERADMIN_LOGIN", {
         email,
         reason: "wrong_password"
@@ -28,7 +29,7 @@ export async function superAdminLogin(req, res) {
     }
 
     // Generate JWT
-    const token = generateToken({ id: "superadmin", role: superAdmin.role });
+    const token = generateToken({ id: "superadmin", role: "superadmin" });
 
     // Log successful login
     await logAction({ id: "superadmin", role: "superadmin" }, "SUPERADMIN_LOGIN", {
@@ -38,7 +39,7 @@ export async function superAdminLogin(req, res) {
     // Respond
     res.json({
       token,
-      user: { email: superAdmin.email, role: superAdmin.role },
+      user: { email: process.env.SUPERADMIN_EMAIL, role: "superadmin" },
       message: "SuperAdmin logged in successfully"
     });
   } catch (err) {
